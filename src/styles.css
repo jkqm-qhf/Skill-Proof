@@ -3179,6 +3179,74 @@ h1 {
     height: 14px;
   }
 }
+.profile-form {
+  display: grid;
+  gap: 16px;
+}
+.profile-form label {
+  display: grid;
+  gap: 8px;
+  font-size: 12px;
+  color: #6d845b;
+}
+.profile-form input,
+.profile-form textarea {
+  width: 100%;
+  border: 1px solid #dce5d2;
+  border-radius: 6px;
+  padding: 10px;
+  background: #fafcf7;
+  color: #4f6841;
+  font: inherit;
+}
+.profile-form textarea {
+  min-height: 85px;
+  resize: vertical;
+}
+.profile-form label:first-child textarea {
+  min-height: 210px;
+  font-family: Consolas, monospace;
+  font-size: 11px;
+}
+.source-preview {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  max-height: 340px;
+  overflow: auto;
+  padding: 15px;
+  background: #f5f8ef;
+  border-radius: 6px;
+  font-size: 11px;
+  line-height: 1.8;
+}
+.hash-text {
+  display: block;
+  font-size: 10px;
+  overflow-wrap: anywhere;
+  color: #839a6c;
+  margin: 15px 0;
+  line-height: 1.8;
+}
+.profiles-page .suite-card > p {
+  margin: 12px 0;
+}
+.profiles-page .skill-grid {
+  margin-top: 20px;
+}
+@media (max-width: 760px) {
+  .sidebar nav {
+    overflow-x: auto;
+    justify-content: flex-start;
+  }
+  .sidebar nav .nav-item {
+    flex: 0 0 auto;
+    min-width: 68px;
+    padding: 10px 7px;
+  }
+  .sidebar nav .nav-item b {
+    display: none;
+  }
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *:before,

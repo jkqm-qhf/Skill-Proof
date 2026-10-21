@@ -44,6 +44,8 @@ import Modal from "./components/Modal";
 import RunHistory from "./components/RunHistory";
 import WorkspaceTransfer from "./components/WorkspaceTransfer";
 import SkillInspector from "./components/SkillInspector";
+import ProfileLibrary from "./components/ProfileLibrary";
+import { parseProfiles, persistProfiles, PROFILE_KEY } from "./profiles";
 import { buildRunReport, createDemoRun } from "./runs";
 import { mergeWorkspace } from "./workspace";
 
@@ -58,6 +60,7 @@ const iconMap = {
 const navigation = [
   { id: "discover", label: "技能发现", icon: LayoutGrid },
   { id: "inspect", label: "技能检查", icon: FileSearch },
+  { id: "profiles", label: "真实档案", icon: BookOpen },
   { id: "benchmarks", label: "评测基准", icon: FlaskConical },
   { id: "compare", label: "技能对比", icon: GitCompareArrows },
   { id: "runs", label: "评测记录", icon: History },
@@ -111,6 +114,10 @@ function App() {
   );
   const [info, setInfo] = useState(false);
   const [transfer, setTransfer] = useState(false);
+  const [profiles, setProfiles] = useState(() =>
+    parseProfiles(readStored(PROFILE_KEY)),
+  );
+  const [profileSource, setProfileSource] = useState<string | null>(null);
   const [toast, setToast] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -304,24 +311,28 @@ function App() {
               <h1>
                 {page === "discover"
                   ? "让每一项能力，有据可查。"
-                  : page === "inspect"
-                    ? "从技能文件，开始建立证据。"
-                    : page === "benchmarks"
-                      ? "好的评测，从标准开始。"
-                      : page === "compare"
-                        ? "把差异放在同一张桌上。"
-                        : "每一次验证，都留下记录。"}
+                  : page === "profiles"
+                    ? "把真实技能，保存为可追溯的档案。"
+                    : page === "inspect"
+                      ? "从技能文件，开始建立证据。"
+                      : page === "benchmarks"
+                        ? "好的评测，从标准开始。"
+                        : page === "compare"
+                          ? "把差异放在同一张桌上。"
+                          : "每一次验证，都留下记录。"}
               </h1>
               <p>
                 {page === "discover"
                   ? "发现、理解和比较 AI 技能，用可验证的结果做选择。"
-                  : page === "inspect"
-                    ? "检查真实 SKILL.md 的基础结构，定位问题，导出可追溯的静态报告。"
-                    : page === "benchmarks"
-                      ? "查看测试维度与能力边界，建立一致的评价方式。"
-                      : page === "compare"
-                        ? "结合能力、运行条件与测试范围，找到适合任务的技能。"
-                        : "回顾本地演示流程，导出带有数据来源说明的结果。"}
+                  : page === "profiles"
+                    ? "维护技能原文、版本与声明；实际能力由后续真实评测验证。"
+                    : page === "inspect"
+                      ? "检查真实 SKILL.md 的基础结构，定位问题，导出可追溯的静态报告。"
+                      : page === "benchmarks"
+                        ? "查看测试维度与能力边界，建立一致的评价方式。"
+                        : page === "compare"
+                          ? "结合能力、运行条件与测试范围，找到适合任务的技能。"
+                          : "回顾本地演示流程，导出带有数据来源说明的结果。"}
               </p>
             </div>
             {page !== "inspect" && (
@@ -333,6 +344,10 @@ function App() {
 
           <div hidden={page !== "inspect"}>
             <SkillInspector
+              onSave={(source) => {
+                setProfileSource(source);
+                navigate("profiles");
+              }}
               onExport={(report) =>
                 download(
                   `skillproof-inspection-${report.source.textSha256.slice(0, 12)}.json`,
@@ -341,6 +356,30 @@ function App() {
               }
             />
           </div>
+
+          {page === "profiles" && (
+            <ProfileLibrary
+              profiles={profiles}
+              initialSource={profileSource}
+              onClearSource={() => setProfileSource(null)}
+              onExport={(profile) =>
+                download(`skillproof-profile-${profile.id}.json`, {
+                  type: "skillproof-profile",
+                  profile,
+                })
+              }
+              onSave={(profile) => {
+                const next = profiles.some((item) => item.id === profile.id)
+                  ? profiles.map((item) =>
+                      item.id === profile.id ? profile : item,
+                    )
+                  : [...profiles, profile];
+                persistProfiles(next);
+                setProfiles(next);
+                notify("真实档案版本已保存；声明能力尚未验证。");
+              }}
+            />
+          )}
 
           {page === "discover" && (
             <>

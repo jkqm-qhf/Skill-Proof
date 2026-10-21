@@ -43,8 +43,10 @@ const resourceLabels = {
 
 export default function SkillInspector({
   onExport,
+  onSave,
 }: {
   onExport: (report: SkillInspection) => void;
+  onSave: (source: string) => void;
 }) {
   const [text, setText] = useState("");
   const [fileName, setFileName] = useState("粘贴内容");
@@ -375,6 +377,13 @@ export default function SkillInspector({
                 <a href={INSPECTION_SOURCE} target="_blank" rel="noreferrer">
                   格式参考：OpenAI Docs <ArrowUpRight size={13} />
                 </a>
+                <button
+                  className="button secondary"
+                  disabled={!report.summary.formatValid}
+                  onClick={() => onSave(text)}
+                >
+                  保存为真实档案
+                </button>
                 <button
                   className="button primary"
                   onClick={() => onExport(report)}
