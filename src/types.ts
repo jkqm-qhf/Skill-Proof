@@ -8,6 +8,7 @@ export type Page =
   | "discover"
   | "profiles"
   | "evaluate"
+  | "gallery"
   | "inspect"
   | "benchmarks"
   | "compare"

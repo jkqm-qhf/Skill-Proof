@@ -9,6 +9,6 @@ Each milestone is implemented, checked, and pushed independently, in order.
 5. [x] Full evidence reports: exact source, manifest, input/output hashes, grader and adapter versions, browser environment/quotas, explicit no-model metadata; Node reproduction command.
 6. [x] Local single-user SQLite API, immutable profile storage, verified execution storage, serial background queue, cancellation, logs, restart recovery, explicit browser sync and server export.
 7. [x] Evidence-verified condition gating, per-case improvements/regressions/output changes, automatic prior-version comparison, and backend regression jobs on registered profile updates with an existing baseline.
-8. [ ] Report sharing, skill submissions, publisher/source attribution and feedback.
+8. [x] Immutable/revocable read-only report snapshots, explicit summary/full-evidence publication, unverified publisher labels, database-backed provenance, skill submission/review and rate-limited feedback. Local-only service verified; no internet deployment or multi-user identity authentication is claimed.
 
 Uploaded Markdown is a declaration, never executable code. Real extraction results are distinct from demo results and static checks. A deterministic adapter does not represent unrestricted execution of arbitrary skill instructions.

@@ -42,7 +42,7 @@ export default function EvaluationLab({
       const execution = await runBenchmark(
         profile,
         version,
-        data => extractRestricted(data, controller.current!.signal),
+        (data) => extractRestricted(data, controller.current!.signal),
         ADAPTER_VERSION,
         setProgress,
         controller.current.signal,
@@ -68,7 +68,11 @@ export default function EvaluationLab({
         </div>
       </div>
       <section className="suite-card">
-        <p className="table-note">受限工作线程：仅接收本次 PDF 字节；解析线程禁用网络 API。输入 ≤ 8 MB、页数 ≤ 30、输出 ≤ 1 MB、单文件 ≤ 10 秒；取消或超时会终止线程。浏览器内存由浏览器管理，此边界不支持任意第三方代码。</p>
+        <p className="table-note">
+          受限工作线程：仅接收本次 PDF 字节；解析线程禁用网络 API。输入 ≤ 8
+          MB、页数 ≤ 30、输出 ≤ 1 MB、单文件 ≤ 10
+          秒；取消或超时会终止线程。浏览器内存由浏览器管理，此边界不支持任意第三方代码。
+        </p>
         <div className="profile-form">
           <label>
             真实技能档案
@@ -112,7 +116,14 @@ export default function EvaluationLab({
           )}
         </div>
         <div className="modal-actions">
-          {busy && <button className="button secondary" onClick={() => controller.current?.abort()}>取消真实执行</button>}
+          {busy && (
+            <button
+              className="button secondary"
+              onClick={() => controller.current?.abort()}
+            >
+              取消真实执行
+            </button>
+          )}
           <button
             className="button secondary"
             disabled={busy}
@@ -154,7 +165,13 @@ export default function EvaluationLab({
         )}
       </section>
       <ExecutionComparison executions={executions} candidate={selected} />
-      <BackendPanel profiles={profiles} executions={executions} profileId={profileId} version={version} onRestore={onRestore} />
+      <BackendPanel
+        profiles={profiles}
+        executions={executions}
+        profileId={profileId}
+        version={version}
+        onRestore={onRestore}
+      />
       <section className="suite-card">
         <h2>真实执行记录</h2>
         <p>

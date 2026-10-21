@@ -3247,6 +3247,86 @@ h1 {
     display: none;
   }
 }
+.suite-card {
+  margin-bottom: 20px;
+}
+.community-actions {
+  display: flex;
+  gap: 9px;
+  flex-wrap: wrap;
+}
+.community-page .skill-grid {
+  margin: 20px 0;
+}
+.submission-row {
+  padding: 18px 0;
+  border-top: 1px solid #e2e9d9;
+  margin-top: 16px;
+}
+.submission-row > p {
+  font-size: 11px;
+  line-height: 1.9;
+  color: #839971;
+  margin: 10px 0;
+}
+.submission-row > small {
+  font-size: 9px;
+  color: #9aac8a;
+}
+.share-option {
+  display: flex;
+  gap: 10px;
+  align-items: flex-start;
+  font-size: 12px;
+  line-height: 1.9;
+  color: #71895a;
+  margin: 20px 0;
+}
+.share-option input {
+  margin-top: 5px;
+}
+.share-link {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #dce5d2;
+  border-radius: 6px;
+  font-size: 11px;
+  margin: 18px 0;
+  box-sizing: border-box;
+}
+.feedback-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.community-page details {
+  font-size: 11px;
+  margin: 15px 0;
+  color: #71895a;
+}
+.profile-form select {
+  padding: 10px;
+  border: 1px solid #dce5d2;
+  border-radius: 6px;
+  background: #fafcf7;
+  color: #627f4d;
+  max-width: 100%;
+}
+.backend-panel .modal-actions {
+  flex-wrap: wrap;
+}
+.inspection-export {
+  flex-wrap: wrap;
+}
+.suite-card h2,
+.suite-card p,
+.report-heading h3,
+.detail-heading h3 {
+  overflow-wrap: anywhere;
+}
+.profile-form select {
+  width: 100%;
+  min-width: 0;
+}
 @media (prefers-reduced-motion: reduce) {
   *,
   *:before,

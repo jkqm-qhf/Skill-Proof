@@ -26,7 +26,9 @@ export default function ExecutionComparison({
   const [busy, setBusy] = useState(false);
   useEffect(() => {
     let cancelled = false;
-    setComparison(null); setError(""); setBusy(false);
+    setComparison(null);
+    setError("");
+    setBusy(false);
     if (candidate) {
       const baseline = findRegressionBaseline(candidate, executions);
       if (baseline) {

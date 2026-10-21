@@ -142,7 +142,15 @@ export async function runBenchmark(
     try {
       output = { pages: await extract(bytes) };
     } catch (cause) {
-      if (cause instanceof Error && ["AbortError", "ExecutionLimitError", "ExecutionInfrastructureError"].includes(cause.name)) throw cause;
+      if (
+        cause instanceof Error &&
+        [
+          "AbortError",
+          "ExecutionLimitError",
+          "ExecutionInfrastructureError",
+        ].includes(cause.name)
+      )
+        throw cause;
       output = {
         error: cause instanceof Error ? cause.message : String(cause),
       };
@@ -179,6 +187,20 @@ export async function runBenchmark(
     },
     durationMs: performance.now() - started,
     results,
-    evidence: { profileSource: revision.source, manifestText: new TextDecoder().decode(manifestBytes), graderVersion: GRADER_VERSION, model: null, modelReason: "Deterministic PDF.js extraction; no language model was called.", environment: { runtime: "browser-worker", userAgent: navigator.userAgent, platform: navigator.platform, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }, limits: { ...EXECUTION_LIMITS } },
+    evidence: {
+      profileSource: revision.source,
+      manifestText: new TextDecoder().decode(manifestBytes),
+      graderVersion: GRADER_VERSION,
+      model: null,
+      modelReason:
+        "Deterministic PDF.js extraction; no language model was called.",
+      environment: {
+        runtime: "browser-worker",
+        userAgent: navigator.userAgent,
+        platform: navigator.platform,
+        timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+      },
+      limits: { ...EXECUTION_LIMITS },
+    },
   };
 }

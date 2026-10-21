@@ -47,6 +47,7 @@ import SkillInspector from "./components/SkillInspector";
 import ProfileLibrary from "./components/ProfileLibrary";
 import FixtureSuite from "./components/FixtureSuite";
 import EvaluationLab from "./components/EvaluationLab";
+import CommunityGallery from "./components/CommunityGallery";
 import { EXECUTION_KEY, parseExecutions, PDF_SKILL_SOURCE } from "./executions";
 import { reviseProfile } from "./profiles";
 import { parseProfiles, persistProfiles, PROFILE_KEY } from "./profiles";
@@ -67,6 +68,7 @@ const navigation = [
   { id: "inspect", label: "技能检查", icon: FileSearch },
   { id: "profiles", label: "真实档案", icon: BookOpen },
   { id: "evaluate", label: "真实评测", icon: FlaskConical },
+  { id: "gallery", label: "共享展示", icon: BookOpen },
   { id: "benchmarks", label: "评测基准", icon: FlaskConical },
   { id: "compare", label: "技能对比", icon: GitCompareArrows },
   { id: "runs", label: "评测记录", icon: History },
@@ -101,8 +103,11 @@ function SkillIcon({
 function App() {
   const initialPage =
     navigation.find((n) => `#${n.id}` === window.location.hash)?.id ??
-    "discover";
+    (window.location.hash.startsWith("#share/") ? "gallery" : "discover");
   const [page, setPage] = useState<Page>(initialPage);
+  const [shareToken, setShareToken] = useState<string | null>(
+    window.location.hash.match(/^#share\/([A-Za-z0-9_-]+)$/)?.[1] ?? null,
+  );
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState<Category>("全部技能");
   const [sort, setSort] = useState("default");
@@ -152,7 +157,10 @@ function App() {
     function onHash() {
       setPage(
         navigation.find((n) => `#${n.id}` === window.location.hash)?.id ??
-          "discover",
+          (window.location.hash.startsWith("#share/") ? "gallery" : "discover"),
+      );
+      setShareToken(
+        window.location.hash.match(/^#share\/([A-Za-z0-9_-]+)$/)?.[1] ?? null,
       );
     }
     function onKey(event: KeyboardEvent) {
@@ -320,35 +328,39 @@ function App() {
               <h1>
                 {page === "discover"
                   ? "让每一项能力，有据可查。"
-                  : page === "evaluate"
-                    ? "用真实文件，运行可检查的测试。"
-                    : page === "profiles"
-                      ? "把真实技能，保存为可追溯的档案。"
-                      : page === "inspect"
-                        ? "从技能文件，开始建立证据。"
-                        : page === "benchmarks"
-                          ? "好的评测，从标准开始。"
-                          : page === "compare"
-                            ? "把差异放在同一张桌上。"
-                            : "每一次验证，都留下记录。"}
+                  : page === "gallery"
+                    ? "让证据，可以分享和讨论。"
+                    : page === "evaluate"
+                      ? "用真实文件，运行可检查的测试。"
+                      : page === "profiles"
+                        ? "把真实技能，保存为可追溯的档案。"
+                        : page === "inspect"
+                          ? "从技能文件，开始建立证据。"
+                          : page === "benchmarks"
+                            ? "好的评测，从标准开始。"
+                            : page === "compare"
+                              ? "把差异放在同一张桌上。"
+                              : "每一次验证，都留下记录。"}
               </h1>
               <p>
                 {page === "discover"
                   ? "发现、理解和比较 AI 技能，用可验证的结果做选择。"
-                  : page === "evaluate"
-                    ? "登记适配器、指定档案版本，记录实际输出与测量结果。"
-                    : page === "profiles"
-                      ? "维护技能原文、版本与声明；实际能力由后续真实评测验证。"
-                      : page === "inspect"
-                        ? "检查真实 SKILL.md 的基础结构，定位问题，导出可追溯的静态报告。"
-                        : page === "benchmarks"
-                          ? "查看测试维度与能力边界，建立一致的评价方式。"
-                          : page === "compare"
-                            ? "结合能力、运行条件与测试范围，找到适合任务的技能。"
-                            : "回顾本地演示流程，导出带有数据来源说明的结果。"}
+                  : page === "gallery"
+                    ? "展示明确来源的只读报告，提交技能与反馈。"
+                    : page === "evaluate"
+                      ? "登记适配器、指定档案版本，记录实际输出与测量结果。"
+                      : page === "profiles"
+                        ? "维护技能原文、版本与声明；实际能力由后续真实评测验证。"
+                        : page === "inspect"
+                          ? "检查真实 SKILL.md 的基础结构，定位问题，导出可追溯的静态报告。"
+                          : page === "benchmarks"
+                            ? "查看测试维度与能力边界，建立一致的评价方式。"
+                            : page === "compare"
+                              ? "结合能力、运行条件与测试范围，找到适合任务的技能。"
+                              : "回顾本地演示流程，导出带有数据来源说明的结果。"}
               </p>
             </div>
-            {page !== "inspect" && (
+            {["discover", "benchmarks", "compare", "runs"].includes(page) && (
               <button className="button primary" onClick={() => openRunner()}>
                 <Plus size={17} /> 新建演示评测
               </button>
@@ -370,6 +382,20 @@ function App() {
             />
           </div>
 
+          {page === "gallery" && (
+            <CommunityGallery
+              token={shareToken}
+              executions={executions}
+              onExport={download}
+              onAccepted={(profile) => {
+                if (!profiles.some((item) => item.id === profile.id)) {
+                  const next = [...profiles, profile];
+                  persistProfiles(next);
+                  setProfiles(next);
+                }
+              }}
+            />
+          )}
           {page === "evaluate" && (
             <EvaluationLab
               profiles={profiles}
@@ -398,8 +424,59 @@ function App() {
                 localStorage.setItem(EXECUTION_KEY, JSON.stringify(next));
                 setExecutions(next);
               }}
-              onRestore={(incomingProfiles, incomingExecutions) => { const nextProfiles = [...profiles]; for (const incoming of incomingProfiles) { const existing = nextProfiles.find(item => item.id === incoming.id); if (!existing) nextProfiles.push(incoming); else { const length = Math.min(existing.revisions.length, incoming.revisions.length); for (let index = 0; index < length; index++) if (JSON.stringify(existing.revisions[index]) !== JSON.stringify(incoming.revisions[index])) throw new Error("本地与后台版本历史冲突，未恢复。请先分别导出检查。"); if (incoming.revisions.length > existing.revisions.length) nextProfiles[nextProfiles.indexOf(existing)] = incoming; } } const nextExecutions = [...executions, ...incomingExecutions.filter(item => !executions.some(existing => existing.id === item.id))].sort((a,b) => Date.parse(b.createdAt)-Date.parse(a.createdAt)).slice(0,50); persistProfiles(nextProfiles); localStorage.setItem(EXECUTION_KEY,JSON.stringify(nextExecutions)); setProfiles(nextProfiles); setExecutions(nextExecutions); }}
-              onExport={(execution) => { void buildExecutionReport(execution).then(report => download(`skillproof-execution-${execution.id}.json`, report)).catch(cause => notify(String(cause))); }}
+              onRestore={(incomingProfiles, incomingExecutions) => {
+                const nextProfiles = [...profiles];
+                for (const incoming of incomingProfiles) {
+                  const existing = nextProfiles.find(
+                    (item) => item.id === incoming.id,
+                  );
+                  if (!existing) nextProfiles.push(incoming);
+                  else {
+                    const length = Math.min(
+                      existing.revisions.length,
+                      incoming.revisions.length,
+                    );
+                    for (let index = 0; index < length; index++)
+                      if (
+                        JSON.stringify(existing.revisions[index]) !==
+                        JSON.stringify(incoming.revisions[index])
+                      )
+                        throw new Error(
+                          "本地与后台版本历史冲突，未恢复。请先分别导出检查。",
+                        );
+                    if (incoming.revisions.length > existing.revisions.length)
+                      nextProfiles[nextProfiles.indexOf(existing)] = incoming;
+                  }
+                }
+                const nextExecutions = [
+                  ...executions,
+                  ...incomingExecutions.filter(
+                    (item) =>
+                      !executions.some((existing) => existing.id === item.id),
+                  ),
+                ]
+                  .sort(
+                    (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
+                  )
+                  .slice(0, 50);
+                persistProfiles(nextProfiles);
+                localStorage.setItem(
+                  EXECUTION_KEY,
+                  JSON.stringify(nextExecutions),
+                );
+                setProfiles(nextProfiles);
+                setExecutions(nextExecutions);
+              }}
+              onExport={(execution) => {
+                void buildExecutionReport(execution)
+                  .then((report) =>
+                    download(
+                      `skillproof-execution-${execution.id}.json`,
+                      report,
+                    ),
+                  )
+                  .catch((cause) => notify(String(cause)));
+              }}
             />
           )}
 
@@ -1190,7 +1267,9 @@ function App() {
             </p>
             <h4>如何理解这里的数据？</h4>
             <p>
-              示例目录和演示评测使用虚构数据。技能检查基于实际输入文本，只检查文档结构。真实 PDF 基准和固定适配器会保存实际输出；本机 SQLite 服务提供任务队列。尚未接入语言模型或认证服务，不同基准不可直接比较。
+              示例目录和演示评测使用虚构数据。技能检查基于实际输入文本，只检查文档结构。真实
+              PDF 基准和固定适配器会保存实际输出；本机 SQLite
+              服务提供任务队列。尚未接入语言模型或认证服务，不同基准不可直接比较。
             </p>
             <h4>独立项目</h4>
             <p>SkillProof 是独立原型，与 OpenAI 无官方隶属或认证关系。</p>

@@ -157,8 +157,16 @@ export default function ProfileLibrary({
               {revision.permissions.join("、") || "未声明"}
             </p>
             <p>
-                <strong>真实执行证据</strong>
-                {executions.filter(item => item.profile.id === selected.id && item.profile.version === revision.version && item.profile.textSha256 === revision.textSha256).length} 条关联记录；仅对所用 PDF 基准有效，静态检查不验证能力。
+              <strong>真实执行证据</strong>
+              {
+                executions.filter(
+                  (item) =>
+                    item.profile.id === selected.id &&
+                    item.profile.version === revision.version &&
+                    item.profile.textSha256 === revision.textSha256,
+                ).length
+              }{" "}
+              条关联记录；仅对所用 PDF 基准有效，静态检查不验证能力。
             </p>
           </div>
           <h4>声明的能力</h4>

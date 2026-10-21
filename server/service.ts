@@ -10,6 +10,7 @@ import { verifyExecutionEvidence } from "../src/reports.ts";
 import { adapterBinding } from "../src/executions.ts";
 import type { Execution } from "../src/executions.ts";
 import { runNodeBenchmark } from "./runner.ts";
+import { communityStore } from "./community.ts";
 
 export interface Job {
   id: string;
@@ -62,6 +63,8 @@ export function createSkillProofService(databaseFile: string) {
   database.exec(
     "PRAGMA journal_mode=WAL; CREATE TABLE IF NOT EXISTS profiles(id TEXT PRIMARY KEY, data TEXT NOT NULL); CREATE TABLE IF NOT EXISTS executions(id TEXT PRIMARY KEY, data TEXT NOT NULL, source TEXT NOT NULL); CREATE TABLE IF NOT EXISTS jobs(id TEXT PRIMARY KEY, data TEXT NOT NULL, profile TEXT NOT NULL);",
   );
+  const community = communityStore(database);
+  const publicWrites = new Map<string, { since: number; count: number }>();
   const all = <T>(table: string): T[] =>
     (
       database
@@ -157,12 +160,90 @@ export function createSkillProofService(databaseFile: string) {
         )
           throw new RequestError(403, "Cross-origin writes forbidden");
       }
+      if (request.method === "POST" && path.startsWith("/api/public/")) {
+        const key = request.socket.remoteAddress ?? "local";
+        const now = Date.now();
+        const previous = publicWrites.get(key);
+        const rate =
+          previous && now - previous.since < 60000
+            ? previous
+            : { since: now, count: 0 };
+        rate.count++;
+        publicWrites.set(key, rate);
+        if (rate.count > 10)
+          throw new RequestError(429, "Too many submissions; try again later");
+      }
+      if (request.method === "GET" && path === "/api/public/shares")
+        return json(response, 200, community.list());
+      const publicShare = path.match(
+        /^\/api\/public\/shares\/([A-Za-z0-9_-]+)(\/feedback)?$/,
+      );
+      if (publicShare) {
+        const share = community.getShare(publicShare[1]);
+        if (!share) throw new RequestError(404, "Share unavailable or revoked");
+        if (request.method === "GET")
+          return json(
+            response,
+            200,
+            publicShare[2] ? community.feedback(share.id) : share,
+          );
+        if (request.method === "POST" && publicShare[2]) {
+          const input = await body(request);
+          return json(
+            response,
+            201,
+            community.addFeedback(share.id, input.name ?? "", input.message),
+          );
+        }
+      }
+      if (request.method === "POST" && path === "/api/public/submissions") {
+        const input = await body(request);
+        return json(
+          response,
+          201,
+          await community.submit(input.publisher, input.source),
+        );
+      }
+      if (request.method === "GET" && path === "/api/submissions")
+        return json(response, 200, community.submissions());
+      const acceptance = path.match(
+        /^\/api\/submissions\/([A-Za-z0-9_-]+)\/accept$/,
+      );
+      if (request.method === "POST" && acceptance)
+        return json(response, 200, await community.accept(acceptance[1]));
+      if (request.method === "POST" && path === "/api/shares") {
+        const input = await body(request);
+        if (
+          typeof input.executionId !== "string" ||
+          typeof input.publisher !== "string" ||
+          typeof input.fullEvidence !== "boolean"
+        )
+          throw new RequestError(400, "Invalid sharing options");
+        return json(
+          response,
+          201,
+          await community.publish(
+            input.executionId,
+            input.publisher,
+            input.fullEvidence,
+          ),
+        );
+      }
+      const revocation = path.match(
+        /^\/api\/shares\/([A-Za-z0-9_-]+)\/revoke$/,
+      );
+      if (request.method === "POST" && revocation) {
+        community.revoke(revocation[1]);
+        return json(response, 200, { revoked: true });
+      }
       if (request.method === "GET" && path === "/api/health")
         return json(response, 200, {
           status: "ok",
           storage: "sqlite",
           concurrency: 1,
           scope: "local-single-user",
+          features: ["queue", "regression", "sharing"],
+          pid: process.pid,
         });
       if (request.method === "GET" && path === "/api/profiles")
         return json(response, 200, all("profiles"));
@@ -245,8 +326,8 @@ export function createSkillProofService(databaseFile: string) {
         const execution: Execution = await body(request);
         await verifyExecutionEvidence(execution);
         const existing = database
-          .prepare("SELECT data FROM executions WHERE id=?")
-          .get(execution.id) as { data: string } | undefined;
+          .prepare("SELECT data,source FROM executions WHERE id=?")
+          .get(execution.id) as { data: string; source: string } | undefined;
         if (existing && existing.data !== JSON.stringify(execution))
           throw new RequestError(409, "Execution id conflict");
         database
@@ -256,7 +337,7 @@ export function createSkillProofService(databaseFile: string) {
           .run(execution.id, JSON.stringify(execution), "browser-import");
         return json(response, 201, {
           id: execution.id,
-          source: "browser-import",
+          source: existing?.source ?? "browser-import",
         });
       }
       if (request.method === "GET" && path === "/api/export")
@@ -267,6 +348,9 @@ export function createSkillProofService(databaseFile: string) {
           profiles: all("profiles"),
           executions: all("executions"),
           jobs: all("jobs"),
+          shares: all("shares"),
+          feedback: all("feedback"),
+          submissions: all("submissions"),
         });
       if (request.method === "GET" && path === "/api/jobs")
         return json(response, 200, all("jobs"));
