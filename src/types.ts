@@ -42,4 +42,14 @@ export interface Run {
   total: number;
   duration: number;
   mode: "demo";
+  snapshot?: RunSnapshot;
+}
+
+export interface RunSnapshot {
+  skillName: string;
+  skillVersion: string;
+  suiteName: string;
+  suiteVersion: string;
+  environment: string;
+  cases: Skill["cases"];
 }

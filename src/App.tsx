@@ -38,6 +38,9 @@ import {
   summarize,
 } from "./lib";
 import type { Category, Page, Run, Skill } from "./types";
+import Modal from "./components/Modal";
+import RunHistory from "./components/RunHistory";
+import { buildRunReport, createDemoRun } from "./runs";
 
 const iconMap = {
   file: FileText,
@@ -77,45 +80,6 @@ function SkillIcon({
     <span className={`skill-icon ${skill.color} ${small ? "small" : ""}`}>
       <Icon size={small ? 19 : 25} strokeWidth={1.6} />
     </span>
-  );
-}
-
-function Modal({
-  title,
-  children,
-  close,
-  wide = false,
-}: {
-  title: string;
-  children: ReactNode;
-  close: () => void;
-  wide?: boolean;
-}) {
-  const ref = useRef<HTMLDialogElement>(null);
-  useEffect(() => {
-    const prior = document.activeElement as HTMLElement | null;
-    ref.current?.showModal();
-    return () => {
-      prior?.focus();
-    };
-  }, []);
-  return (
-    <dialog
-      ref={ref}
-      className={`modal ${wide ? "wide" : ""}`}
-      onCancel={close}
-      onClick={(e) => {
-        if (e.target === e.currentTarget) close();
-      }}
-    >
-      <div className="modal-header">
-        <h2>{title}</h2>
-        <button className="icon-button" onClick={close} aria-label="关闭弹窗">
-          <X size={20} />
-        </button>
-      </div>
-      {children}
-    </dialog>
   );
 }
 
@@ -217,17 +181,10 @@ function App() {
     if (running) return;
     setRunning(true);
     timer.current = setTimeout(() => {
-      const summary = summarize(runSkill);
-      const run: Run = {
+      const run = createDemoRun(runSkill, runSuite, {
         id: crypto.randomUUID(),
-        skillId: runSkill.id,
-        suiteId: runSuite.id,
         createdAt: new Date().toISOString(),
-        passed: summary.passed,
-        total: summary.total,
-        duration: summary.duration,
-        mode: "demo",
-      };
+      });
       setRuns((previous) => [run, ...previous].slice(0, 100));
       setRunning(false);
       setRunner(false);
@@ -236,14 +193,10 @@ function App() {
     }, 1500);
   }
   function exportRun(run: Run) {
-    const skill = skills.find((s) => s.id === run.skillId)!;
-    download(`skillproof-${skill.id}-${run.id.slice(0, 8)}.json`, {
-      schemaVersion: "0.1.0",
-      disclaimer: "Fictional fixture data. No skill or model was executed.",
-      run,
-      skill,
-      suite: suites.find((s) => s.id === run.suiteId),
-    });
+    download(
+      `skillproof-${run.skillId}-${run.id.slice(0, 8)}.json`,
+      buildRunReport(run),
+    );
   }
 
   return (
@@ -829,102 +782,32 @@ function App() {
           )}
 
           {page === "runs" && (
-            <>
-              {runs.length > 0 ? (
-                <section className="runs-section">
-                  <div className="section-heading">
-                    <h2>
-                      本地评测记录 <span>{runs.length} RUNS</span>
-                    </h2>
-                    <span className="muted">仅保留最近 100 次演示</span>
-                  </div>
-                  <div className="notice compact">
-                    <CircleHelp size={18} />
-                    <span>
-                      这些记录演示完整产品流程，未调用模型、读取文件或执行真实技能。
-                    </span>
-                  </div>
-                  <div className="table-scroll">
-                    <table className="runs-table">
-                      <thead>
-                        <tr>
-                          <th>技能 / 基准</th>
-                          <th>数据来源</th>
-                          <th>通过用例</th>
-                          <th>示例总耗时</th>
-                          <th>创建时间</th>
-                          <th>报告</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {runs.map((run) => {
-                          const skill = skills.find(
-                            (s) => s.id === run.skillId,
-                          )!;
-                          return (
-                            <tr key={run.id}>
-                              <td>
-                                <button
-                                  className="run-name"
-                                  onClick={() => setDetail(skill)}
-                                >
-                                  <SkillIcon skill={skill} small />
-                                  <span>
-                                    <strong>{skill.name}</strong>
-                                    <small>
-                                      {
-                                        suites.find((s) => s.id === run.suiteId)
-                                          ?.name
-                                      }
-                                    </small>
-                                  </span>
-                                </button>
-                              </td>
-                              <td>
-                                <span className="demo-tag">预设演示</span>
-                              </td>
-                              <td>
-                                <strong>
-                                  {run.passed} / {run.total}
-                                </strong>
-                              </td>
-                              <td>{run.duration} s</td>
-                              <td>
-                                {new Date(run.createdAt).toLocaleString(
-                                  "zh-CN",
-                                  { hour12: false },
-                                )}
-                              </td>
-                              <td>
-                                <button
-                                  className="icon-button"
-                                  aria-label={`导出 ${skill.name} 评测报告`}
-                                  onClick={() => exportRun(run)}
-                                >
-                                  <ArrowDownToLine size={17} />
-                                </button>
-                              </td>
-                            </tr>
-                          );
-                        })}
-                      </tbody>
-                    </table>
-                  </div>
-                </section>
-              ) : (
-                <div className="empty-state large">
-                  <History size={40} />
-                  <h3>还没有评测记录</h3>
-                  <p>运行一次演示，了解从选择技能到导出结果的完整流程。</p>
-                  <button
-                    className="button primary"
-                    onClick={() => openRunner()}
-                  >
-                    <Plus size={16} /> 新建演示评测
-                  </button>
-                </div>
-              )}
-            </>
+            <RunHistory
+              runs={runs}
+              skills={skills}
+              suites={suites}
+              onStart={openRunner}
+              onExport={exportRun}
+              onExportMany={(selectedRuns) =>
+                download(
+                  `skillproof-runs-${new Date().toISOString().slice(0, 10)}.json`,
+                  {
+                    schemaVersion: "0.2.0",
+                    mode: "demo",
+                    exportedAt: new Date().toISOString(),
+                    count: selectedRuns.length,
+                    reports: selectedRuns.map(buildRunReport),
+                  },
+                )
+              }
+              onDelete={(ids) => {
+                const removed = new Set(ids);
+                setRuns((previous) =>
+                  previous.filter((run) => !removed.has(run.id)),
+                );
+                notify(`已删除 ${ids.length} 条评测记录。`);
+              }}
+            />
           )}
 
           <footer className="page-footer">
@@ -1075,6 +958,7 @@ function App() {
       {runner && (
         <Modal
           title="新建演示评测"
+          closeDisabled={running}
           close={() => {
             if (!running) setRunner(false);
           }}
@@ -1157,7 +1041,7 @@ function App() {
             <h4>这个版本可以做什么？</h4>
             <p>
               浏览和筛选示例技能、收藏档案、对比能力、回放演示评测，并导出 JSON
-              报告。收藏与记录仅保存在当前浏览器。
+              报告。评测记录支持搜索、基准筛选、历史明细、批量导出和删除。收藏与记录仅保存在当前浏览器。
             </p>
             <h4>如何理解这里的数据？</h4>
             <p>

@@ -2256,6 +2256,162 @@ h1 {
     padding: 60px 15px;
   }
 }
+.history-toolbar {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 22px 0 14px;
+}
+.history-toolbar .search-box {
+  flex: 1;
+  min-width: 220px;
+}
+.history-toolbar select {
+  padding: 10px 12px;
+  border: 1px solid #dce3d4;
+  background: #fff;
+  border-radius: 6px;
+  font-size: 11px;
+  color: #657958;
+  max-width: 100%;
+}
+.history-actions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin-bottom: 19px;
+}
+.history-actions > span {
+  color: #8a987d;
+  font-size: 11px;
+}
+.history-actions > div {
+  display: flex;
+  gap: 8px;
+}
+.history-actions .button {
+  min-height: 33px;
+  font-size: 10px;
+  padding: 0 10px;
+}
+.history-evidence {
+  display: block;
+  margin-top: 7px;
+  font-size: 9px;
+  color: #97a489;
+}
+.run-name strong em {
+  font-size: 8px;
+  font-weight: 400;
+  font-style: normal;
+  margin-left: 7px;
+  color: #9baa8b;
+  white-space: nowrap;
+}
+.row-actions {
+  display: flex;
+  gap: 3px;
+  align-items: center;
+}
+.button.danger-subtle {
+  color: #9d6e5c;
+}
+.button.danger-subtle:hover,
+.danger-icon:hover {
+  background: #faf0eb;
+  color: #ac5b43;
+}
+.button.danger {
+  background: #a8523d;
+  color: #fff;
+  border: 1px solid #a8523d;
+}
+.button.danger:hover {
+  background: #8e422f;
+}
+.report-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 14px;
+  margin-bottom: 22px;
+}
+.report-heading h3 {
+  font-size: 24px;
+  font-weight: 550;
+}
+.report-heading p {
+  font-size: 11px;
+  line-height: 1.9;
+  color: #89997c;
+  margin-top: 7px;
+}
+.report-id {
+  font-size: 10px;
+  color: #a0ad92;
+  overflow-wrap: anywhere;
+  line-height: 1.9;
+  margin: 20px 0;
+}
+.delete-copy {
+  text-align: center;
+  padding: 12px 8px;
+}
+.delete-copy h3 {
+  font-size: 21px;
+  font-weight: 500;
+  margin: 17px 0 12px;
+}
+.delete-copy p {
+  font-size: 12px;
+  color: #8e9b82;
+  line-height: 2;
+  margin-top: 7px;
+}
+.delete-symbol {
+  display: inline-grid;
+  place-items: center;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #fbede6;
+  color: #b37b61;
+}
+.history-empty {
+  margin-top: 18px;
+}
+@media (max-width: 540px) {
+  .history-toolbar {
+    gap: 8px;
+  }
+  .history-toolbar .search-box {
+    flex-basis: 100%;
+  }
+  .history-toolbar select {
+    flex: 1;
+    font-size: 10px;
+    min-width: 0;
+  }
+  .history-actions {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 11px;
+  }
+  .report-heading h3 {
+    font-size: 20px;
+  }
+  .report-heading p {
+    font-size: 10px;
+  }
+  .runs-section {
+    padding: 14px;
+  }
+  .history-actions > div {
+    flex-wrap: wrap;
+  }
+}
 /* Readability and compact-screen refinements. */
 .card-description {
   font-size: 12px;
