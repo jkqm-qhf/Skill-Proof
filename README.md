@@ -83,6 +83,8 @@ public/
 
 ## 后续接入位置
 
+“真实评测”运行固定登记的 `pdfjs-text` 适配器（PDF.js 版本由锁文件固定），真实读取 5 项 PDF 输入并按逐页文本评分。点击“登记内置 PDF 提取档案”建立对应原文；只有明确声明 `metadata.skillproof.adapter: pdfjs-text` 的档案可执行。实际执行的是登记适配器，不是任意 Markdown 指令，也不调用大模型。每个记录标注 `mode: executed`，与演示记录分开；保存档案版本、输入输出哈希、错误、耗时和评分依据，最多保留 50 条，可单独导出。
+
 真实 PDF 基准位于 `public/fixtures/pdf-text-v1/`，5 个文件均由项目生成，使用 CC0-1.0 发布。`manifest.json` 保存逐页预期文本、输入 SHA-256 和评分规则。用 `node scripts/generate-fixtures.mjs` 可确定性重建；测试验证文件指纹、页序与空白页评分。基准只覆盖英文/ASCII 数字 PDF，不测试扫描件、中文字体、公式或多栏版式。
 
 1. 将 `data.ts` 中的技能档案与基准模板迁移到后端存储，加入发布者身份与版本溯源。

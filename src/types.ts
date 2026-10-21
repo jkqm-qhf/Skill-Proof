@@ -7,6 +7,7 @@ export type Category =
 export type Page =
   | "discover"
   | "profiles"
+  | "evaluate"
   | "inspect"
   | "benchmarks"
   | "compare"

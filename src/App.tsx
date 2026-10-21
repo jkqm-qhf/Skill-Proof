@@ -46,6 +46,9 @@ import WorkspaceTransfer from "./components/WorkspaceTransfer";
 import SkillInspector from "./components/SkillInspector";
 import ProfileLibrary from "./components/ProfileLibrary";
 import FixtureSuite from "./components/FixtureSuite";
+import EvaluationLab from "./components/EvaluationLab";
+import { EXECUTION_KEY, parseExecutions, PDF_SKILL_SOURCE } from "./executions";
+import { reviseProfile } from "./profiles";
 import { parseProfiles, persistProfiles, PROFILE_KEY } from "./profiles";
 import { buildRunReport, createDemoRun } from "./runs";
 import { mergeWorkspace } from "./workspace";
@@ -62,6 +65,7 @@ const navigation = [
   { id: "discover", label: "技能发现", icon: LayoutGrid },
   { id: "inspect", label: "技能检查", icon: FileSearch },
   { id: "profiles", label: "真实档案", icon: BookOpen },
+  { id: "evaluate", label: "真实评测", icon: FlaskConical },
   { id: "benchmarks", label: "评测基准", icon: FlaskConical },
   { id: "compare", label: "技能对比", icon: GitCompareArrows },
   { id: "runs", label: "评测记录", icon: History },
@@ -119,6 +123,9 @@ function App() {
     parseProfiles(readStored(PROFILE_KEY)),
   );
   const [profileSource, setProfileSource] = useState<string | null>(null);
+  const [executions, setExecutions] = useState(() =>
+    parseExecutions(readStored(EXECUTION_KEY)),
+  );
   const [toast, setToast] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -312,28 +319,32 @@ function App() {
               <h1>
                 {page === "discover"
                   ? "让每一项能力，有据可查。"
-                  : page === "profiles"
-                    ? "把真实技能，保存为可追溯的档案。"
-                    : page === "inspect"
-                      ? "从技能文件，开始建立证据。"
-                      : page === "benchmarks"
-                        ? "好的评测，从标准开始。"
-                        : page === "compare"
-                          ? "把差异放在同一张桌上。"
-                          : "每一次验证，都留下记录。"}
+                  : page === "evaluate"
+                    ? "用真实文件，运行可检查的测试。"
+                    : page === "profiles"
+                      ? "把真实技能，保存为可追溯的档案。"
+                      : page === "inspect"
+                        ? "从技能文件，开始建立证据。"
+                        : page === "benchmarks"
+                          ? "好的评测，从标准开始。"
+                          : page === "compare"
+                            ? "把差异放在同一张桌上。"
+                            : "每一次验证，都留下记录。"}
               </h1>
               <p>
                 {page === "discover"
                   ? "发现、理解和比较 AI 技能，用可验证的结果做选择。"
-                  : page === "profiles"
-                    ? "维护技能原文、版本与声明；实际能力由后续真实评测验证。"
-                    : page === "inspect"
-                      ? "检查真实 SKILL.md 的基础结构，定位问题，导出可追溯的静态报告。"
-                      : page === "benchmarks"
-                        ? "查看测试维度与能力边界，建立一致的评价方式。"
-                        : page === "compare"
-                          ? "结合能力、运行条件与测试范围，找到适合任务的技能。"
-                          : "回顾本地演示流程，导出带有数据来源说明的结果。"}
+                  : page === "evaluate"
+                    ? "登记适配器、指定档案版本，记录实际输出与测量结果。"
+                    : page === "profiles"
+                      ? "维护技能原文、版本与声明；实际能力由后续真实评测验证。"
+                      : page === "inspect"
+                        ? "检查真实 SKILL.md 的基础结构，定位问题，导出可追溯的静态报告。"
+                        : page === "benchmarks"
+                          ? "查看测试维度与能力边界，建立一致的评价方式。"
+                          : page === "compare"
+                            ? "结合能力、运行条件与测试范围，找到适合任务的技能。"
+                            : "回顾本地演示流程，导出带有数据来源说明的结果。"}
               </p>
             </div>
             {page !== "inspect" && (
@@ -357,6 +368,40 @@ function App() {
               }
             />
           </div>
+
+          {page === "evaluate" && (
+            <EvaluationLab
+              profiles={profiles}
+              executions={executions}
+              onRegister={async () => {
+                const existing = profiles.find(
+                  (item) => item.revisions.at(-1)?.source === PDF_SKILL_SOURCE,
+                );
+                if (existing) return existing.id;
+                const { profile } = await reviseProfile(
+                  undefined,
+                  PDF_SKILL_SOURCE,
+                  {
+                    claims: ["提取英文数字 PDF 的逐页文字"],
+                    environment: "Browser / PDF.js",
+                    permissions: ["读取选定的基准文件"],
+                  },
+                );
+                const next = [...profiles, profile];
+                persistProfiles(next);
+                setProfiles(next);
+                return profile.id;
+              }}
+              onExecution={(execution) => {
+                const next = [execution, ...executions].slice(0, 50);
+                localStorage.setItem(EXECUTION_KEY, JSON.stringify(next));
+                setExecutions(next);
+              }}
+              onExport={(execution) =>
+                download(`skillproof-execution-${execution.id}.json`, execution)
+              }
+            />
+          )}
 
           {page === "profiles" && (
             <ProfileLibrary
