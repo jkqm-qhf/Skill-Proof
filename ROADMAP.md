@@ -5,7 +5,7 @@ Each milestone is implemented, checked, and pushed independently, in order.
 1. [x] Real skill profiles: source, declarations, immutable version history, hashes, local persistence, export.
 2. [x] Versioned digital PDF fixtures with expected outputs and scoring rules (5 actual files, CC0, scoped to English/ASCII digital PDFs).
 3. [x] Actual deterministic PDF.js extraction adapter, registered profile binding, pinned profile revision, input/output hashes, measured results distinct from demos.
-4. [ ] Restricted execution boundary, cancellation, timeout and resource limits.
+4. [x] Fixed-adapter browser worker boundary, network API denial, cancellation/termination, 10-second per-file timeout and input/page/output quotas. Not an OS sandbox for arbitrary plugins; browser heap is not independently capped.
 5. [ ] Reproducible reports with environment and artifact hashes.
 6. [ ] Backend persistence and queued task management.
 7. [ ] Same-condition comparisons and version regression checks.

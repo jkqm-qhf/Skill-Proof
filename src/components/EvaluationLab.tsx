@@ -1,14 +1,10 @@
-import { useState } from "react";
-import pdfWorkerUrl from "pdfjs-dist/legacy/build/pdf.worker.mjs?url";
-import {
-  configurePdfWorker,
-  extractPdfText,
-  ADAPTER_VERSION,
-} from "../pdf-adapter";
+import { useEffect, useRef, useState } from "react";
+import pdfPackage from "pdfjs-dist/package.json";
+const ADAPTER_VERSION = pdfPackage.version;
+import { extractRestricted } from "../restricted-extractor";
 import { adapterBinding, runBenchmark } from "../executions";
 import type { Execution } from "../executions";
 import type { SkillProfile } from "../profiles";
-configurePdfWorker(pdfWorkerUrl);
 
 export default function EvaluationLab({
   profiles,
@@ -29,19 +25,23 @@ export default function EvaluationLab({
   const [progress, setProgress] = useState("");
   const [error, setError] = useState("");
   const [selected, setSelected] = useState<Execution | null>(null);
+  const controller = useRef<AbortController | null>(null);
+  useEffect(() => () => controller.current?.abort(), []);
   const profile = profiles.find((item) => item.id === profileId);
   const revision = profile?.revisions.find((item) => item.version === version);
   async function run() {
     if (!profile) return;
     setBusy(true);
     setError("");
+    controller.current = new AbortController();
     try {
       const execution = await runBenchmark(
         profile,
         version,
-        extractPdfText,
+        data => extractRestricted(data, controller.current!.signal),
         ADAPTER_VERSION,
         setProgress,
+        controller.current.signal,
       );
       onExecution(execution);
       setSelected(execution);
@@ -64,6 +64,7 @@ export default function EvaluationLab({
         </div>
       </div>
       <section className="suite-card">
+        <p className="table-note">受限工作线程：仅接收本次 PDF 字节；解析线程禁用网络 API。输入 ≤ 8 MB、页数 ≤ 30、输出 ≤ 1 MB、单文件 ≤ 10 秒；取消或超时会终止线程。浏览器内存由浏览器管理，此边界不支持任意第三方代码。</p>
         <div className="profile-form">
           <label>
             真实技能档案
@@ -107,6 +108,7 @@ export default function EvaluationLab({
           )}
         </div>
         <div className="modal-actions">
+          {busy && <button className="button secondary" onClick={() => controller.current?.abort()}>取消真实执行</button>}
           <button
             className="button secondary"
             disabled={busy}

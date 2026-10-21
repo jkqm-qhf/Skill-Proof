@@ -103,6 +103,7 @@ export async function runBenchmark(
   extract: (data: Uint8Array) => Promise<string[]>,
   adapterVersion: string,
   progress: (message: string) => void,
+  signal?: AbortSignal,
 ): Promise<Execution> {
   const revision = profile.revisions.find((item) => item.version === version);
   if (!revision || adapterBinding(revision.source) !== "pdfjs-text")
@@ -112,7 +113,8 @@ export async function runBenchmark(
     revision.textSha256
   )
     throw new Error("技能原文与保存的哈希不一致，拒绝执行。");
-  const response = await fetch(`${FIXTURE_ROOT}manifest.json`);
+  signal?.throwIfAborted();
+  const response = await fetch(`${FIXTURE_ROOT}manifest.json`, { signal });
   if (!response.ok) throw new Error("测试清单加载失败");
   const manifestBytes = new Uint8Array(await response.arrayBuffer());
   const manifest: FixtureManifest = JSON.parse(
@@ -121,10 +123,11 @@ export async function runBenchmark(
   const results: ExecutionCase[] = [];
   const started = performance.now();
   for (const fixture of manifest.cases) {
+    signal?.throwIfAborted();
     progress(`正在提取：${fixture.title}`);
     if (!/^[a-z0-9-]+\.pdf$/.test(fixture.file))
       throw new Error("测试文件路径无效");
-    const file = await fetch(`${FIXTURE_ROOT}${fixture.file}`);
+    const file = await fetch(`${FIXTURE_ROOT}${fixture.file}`, { signal });
     if (!file.ok) throw new Error("测试文件加载失败");
     const bytes = new Uint8Array(await file.arrayBuffer());
     const inputSha256 = await sha256(bytes);
@@ -135,6 +138,7 @@ export async function runBenchmark(
     try {
       output = { pages: await extract(bytes) };
     } catch (cause) {
+      if (cause instanceof Error && ["AbortError", "ExecutionLimitError", "ExecutionInfrastructureError"].includes(cause.name)) throw cause;
       output = {
         error: cause instanceof Error ? cause.message : String(cause),
       };
@@ -152,6 +156,7 @@ export async function runBenchmark(
       expect: fixture.expect,
     });
   }
+  signal?.throwIfAborted();
   return {
     id: crypto.randomUUID(),
     mode: "executed",
