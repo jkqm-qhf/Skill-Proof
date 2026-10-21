@@ -52,6 +52,7 @@ import { reviseProfile } from "./profiles";
 import { parseProfiles, persistProfiles, PROFILE_KEY } from "./profiles";
 import { buildRunReport, createDemoRun } from "./runs";
 import { mergeWorkspace } from "./workspace";
+import { buildExecutionReport } from "./reports";
 
 const iconMap = {
   file: FileText,
@@ -397,9 +398,7 @@ function App() {
                 localStorage.setItem(EXECUTION_KEY, JSON.stringify(next));
                 setExecutions(next);
               }}
-              onExport={(execution) =>
-                download(`skillproof-execution-${execution.id}.json`, execution)
-              }
+              onExport={(execution) => { void buildExecutionReport(execution).then(report => download(`skillproof-execution-${execution.id}.json`, report)).catch(cause => notify(String(cause))); }}
             />
           )}
 

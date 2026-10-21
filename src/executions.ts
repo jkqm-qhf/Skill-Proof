@@ -2,6 +2,9 @@ import { parseDocument } from "yaml";
 import { FIXTURE_ROOT, scoreExtraction, sha256 } from "./benchmark.ts";
 import type { FixtureCase, FixtureManifest } from "./benchmark.ts";
 import type { SkillProfile } from "./profiles.ts";
+import { GRADER_VERSION } from "./reports.ts";
+import type { ExecutionEvidence } from "./reports.ts";
+import { EXECUTION_LIMITS } from "./limits.ts";
 
 export const EXECUTION_KEY = "skillproof:executions";
 export const PDF_SKILL_SOURCE = `---
@@ -39,6 +42,7 @@ export interface ExecutionCase {
   expect: FixtureCase["expect"];
 }
 export interface Execution {
+  evidence?: ExecutionEvidence;
   id: string;
   mode: "executed";
   createdAt: string;
@@ -175,5 +179,6 @@ export async function runBenchmark(
     },
     durationMs: performance.now() - started,
     results,
+    evidence: { profileSource: revision.source, manifestText: new TextDecoder().decode(manifestBytes), graderVersion: GRADER_VERSION, model: null, modelReason: "Deterministic PDF.js extraction; no language model was called.", environment: { runtime: "browser-worker", userAgent: navigator.userAgent, platform: navigator.platform, timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone }, limits: { ...EXECUTION_LIMITS } },
   };
 }
