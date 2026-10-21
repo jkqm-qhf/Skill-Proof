@@ -3,6 +3,7 @@ import { ArrowDownToLine, CheckCircle2, FileText, Plus } from "lucide-react";
 import { reviseProfile } from "../profiles";
 import type { SkillProfile } from "../profiles";
 import Modal from "./Modal";
+import type { Execution } from "../executions";
 
 export default function ProfileLibrary({
   profiles,
@@ -10,12 +11,14 @@ export default function ProfileLibrary({
   onExport,
   initialSource,
   onClearSource,
+  executions,
 }: {
   profiles: SkillProfile[];
   onSave: (profile: SkillProfile) => void;
   onExport: (profile: SkillProfile) => void;
   initialSource: string | null;
   onClearSource: () => void;
+  executions: Execution[];
 }) {
   const [editing, setEditing] = useState<{
     id?: string;
@@ -154,8 +157,8 @@ export default function ProfileLibrary({
               {revision.permissions.join("、") || "未声明"}
             </p>
             <p>
-              <strong>已验证能力</strong>
-              尚无关联的真实评测；静态检查不验证能力。
+                <strong>真实执行证据</strong>
+                {executions.filter(item => item.profile.id === selected.id && item.profile.version === revision.version && item.profile.textSha256 === revision.textSha256).length} 条关联记录；仅对所用 PDF 基准有效，静态检查不验证能力。
             </p>
           </div>
           <h4>声明的能力</h4>

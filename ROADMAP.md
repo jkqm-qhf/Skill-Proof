@@ -7,7 +7,7 @@ Each milestone is implemented, checked, and pushed independently, in order.
 3. [x] Actual deterministic PDF.js extraction adapter, registered profile binding, pinned profile revision, input/output hashes, measured results distinct from demos.
 4. [x] Fixed-adapter browser worker boundary, network API denial, cancellation/termination, 10-second per-file timeout and input/page/output quotas. Not an OS sandbox for arbitrary plugins; browser heap is not independently capped.
 5. [x] Full evidence reports: exact source, manifest, input/output hashes, grader and adapter versions, browser environment/quotas, explicit no-model metadata; Node reproduction command.
-6. [ ] Backend persistence and queued task management.
+6. [x] Local single-user SQLite API, immutable profile storage, verified execution storage, serial background queue, cancellation, logs, restart recovery, explicit browser sync and server export.
 7. [ ] Same-condition comparisons and version regression checks.
 8. [ ] Report sharing, skill submissions, publisher/source attribution and feedback.
 

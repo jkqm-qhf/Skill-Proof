@@ -5,6 +5,7 @@ import { extractRestricted } from "../restricted-extractor";
 import { adapterBinding, runBenchmark } from "../executions";
 import type { Execution } from "../executions";
 import type { SkillProfile } from "../profiles";
+import BackendPanel from "./BackendPanel";
 
 export default function EvaluationLab({
   profiles,
@@ -12,12 +13,14 @@ export default function EvaluationLab({
   onRegister,
   onExecution,
   onExport,
+  onRestore,
 }: {
   profiles: SkillProfile[];
   executions: Execution[];
   onRegister: () => Promise<string>;
   onExecution: (execution: Execution) => void;
   onExport: (execution: Execution) => void;
+  onRestore: (profiles: SkillProfile[], executions: Execution[]) => void;
 }) {
   const [profileId, setProfileId] = useState("");
   const [version, setVersion] = useState(1);
@@ -149,6 +152,7 @@ export default function EvaluationLab({
           </p>
         )}
       </section>
+      <BackendPanel profiles={profiles} executions={executions} profileId={profileId} version={version} onRestore={onRestore} />
       <section className="suite-card">
         <h2>真实执行记录</h2>
         <p>

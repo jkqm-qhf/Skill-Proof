@@ -398,6 +398,7 @@ function App() {
                 localStorage.setItem(EXECUTION_KEY, JSON.stringify(next));
                 setExecutions(next);
               }}
+              onRestore={(incomingProfiles, incomingExecutions) => { const nextProfiles = [...profiles]; for (const incoming of incomingProfiles) { const existing = nextProfiles.find(item => item.id === incoming.id); if (!existing) nextProfiles.push(incoming); else { const length = Math.min(existing.revisions.length, incoming.revisions.length); for (let index = 0; index < length; index++) if (JSON.stringify(existing.revisions[index]) !== JSON.stringify(incoming.revisions[index])) throw new Error("本地与后台版本历史冲突，未恢复。请先分别导出检查。"); if (incoming.revisions.length > existing.revisions.length) nextProfiles[nextProfiles.indexOf(existing)] = incoming; } } const nextExecutions = [...executions, ...incomingExecutions.filter(item => !executions.some(existing => existing.id === item.id))].sort((a,b) => Date.parse(b.createdAt)-Date.parse(a.createdAt)).slice(0,50); persistProfiles(nextProfiles); localStorage.setItem(EXECUTION_KEY,JSON.stringify(nextExecutions)); setProfiles(nextProfiles); setExecutions(nextExecutions); }}
               onExport={(execution) => { void buildExecutionReport(execution).then(report => download(`skillproof-execution-${execution.id}.json`, report)).catch(cause => notify(String(cause))); }}
             />
           )}
@@ -405,6 +406,7 @@ function App() {
           {page === "profiles" && (
             <ProfileLibrary
               profiles={profiles}
+              executions={executions}
               initialSource={profileSource}
               onClearSource={() => setProfileSource(null)}
               onExport={(profile) =>
@@ -1188,8 +1190,7 @@ function App() {
             </p>
             <h4>如何理解这里的数据？</h4>
             <p>
-              技能目录和评测记录使用虚构演示数据。技能检查报告基于实际输入文本，只检查文档结构，不代表真实执行表现。评测基准目前是设计模板，尚未接入执行器、模型
-              API 或认证服务。不同基准的分数不可直接比较。
+              示例目录和演示评测使用虚构数据。技能检查基于实际输入文本，只检查文档结构。真实 PDF 基准和固定适配器会保存实际输出；本机 SQLite 服务提供任务队列。尚未接入语言模型或认证服务，不同基准不可直接比较。
             </p>
             <h4>独立项目</h4>
             <p>SkillProof 是独立原型，与 OpenAI 无官方隶属或认证关系。</p>
