@@ -14,6 +14,7 @@ import {
   Clock3,
   DatabaseBackup,
   FileCheck2,
+  FileSearch,
   FileText,
   FlaskConical,
   GitCompareArrows,
@@ -42,6 +43,7 @@ import type { Category, Page, Run, Skill } from "./types";
 import Modal from "./components/Modal";
 import RunHistory from "./components/RunHistory";
 import WorkspaceTransfer from "./components/WorkspaceTransfer";
+import SkillInspector from "./components/SkillInspector";
 import { buildRunReport, createDemoRun } from "./runs";
 import { mergeWorkspace } from "./workspace";
 
@@ -55,6 +57,7 @@ const iconMap = {
 };
 const navigation = [
   { id: "discover", label: "技能发现", icon: LayoutGrid },
+  { id: "inspect", label: "技能检查", icon: FileSearch },
   { id: "benchmarks", label: "评测基准", icon: FlaskConical },
   { id: "compare", label: "技能对比", icon: GitCompareArrows },
   { id: "runs", label: "评测记录", icon: History },
@@ -221,7 +224,7 @@ function App() {
         <div className="workspace">
           <span className="workspace-icon">S</span>
           <div>
-            探索工作台<small>本地演示空间</small>
+            探索工作台<small>本地工作区</small>
           </div>
           <span className="demo-mini">DEMO</span>
         </div>
@@ -301,25 +304,42 @@ function App() {
               <h1>
                 {page === "discover"
                   ? "让每一项能力，有据可查。"
-                  : page === "benchmarks"
-                    ? "好的评测，从标准开始。"
-                    : page === "compare"
-                      ? "把差异放在同一张桌上。"
-                      : "每一次验证，都留下记录。"}
+                  : page === "inspect"
+                    ? "从技能文件，开始建立证据。"
+                    : page === "benchmarks"
+                      ? "好的评测，从标准开始。"
+                      : page === "compare"
+                        ? "把差异放在同一张桌上。"
+                        : "每一次验证，都留下记录。"}
               </h1>
               <p>
                 {page === "discover"
                   ? "发现、理解和比较 AI 技能，用可验证的结果做选择。"
-                  : page === "benchmarks"
-                    ? "查看测试维度与能力边界，建立一致的评价方式。"
-                    : page === "compare"
-                      ? "结合能力、运行条件与测试范围，找到适合任务的技能。"
-                      : "回顾本地演示流程，导出带有数据来源说明的结果。"}
+                  : page === "inspect"
+                    ? "检查真实 SKILL.md 的基础结构，定位问题，导出可追溯的静态报告。"
+                    : page === "benchmarks"
+                      ? "查看测试维度与能力边界，建立一致的评价方式。"
+                      : page === "compare"
+                        ? "结合能力、运行条件与测试范围，找到适合任务的技能。"
+                        : "回顾本地演示流程，导出带有数据来源说明的结果。"}
               </p>
             </div>
-            <button className="button primary" onClick={() => openRunner()}>
-              <Plus size={17} /> 新建演示评测
-            </button>
+            {page !== "inspect" && (
+              <button className="button primary" onClick={() => openRunner()}>
+                <Plus size={17} /> 新建演示评测
+              </button>
+            )}
+          </div>
+
+          <div hidden={page !== "inspect"}>
+            <SkillInspector
+              onExport={(report) =>
+                download(
+                  `skillproof-inspection-${report.source.textSha256.slice(0, 12)}.json`,
+                  report,
+                )
+              }
+            />
           </div>
 
           {page === "discover" && (
@@ -1078,11 +1098,12 @@ function App() {
             <h4>这个版本可以做什么？</h4>
             <p>
               浏览和筛选示例技能、收藏档案、对比能力、回放演示评测，并导出 JSON
-              报告。评测记录支持搜索、基准筛选、历史明细、批量导出和删除。收藏与记录保存在当前浏览器，可通过顶部“备份与恢复”导出或合并导入。
+              报告。技能检查页支持上传真实 SKILL.md
+              或粘贴内容，执行静态结构检查并导出报告。收藏与演示记录保存在当前浏览器，可通过顶部“备份与恢复”导出或合并导入。
             </p>
             <h4>如何理解这里的数据？</h4>
             <p>
-              全部技能和测试结果都是虚构演示数据。评测基准目前是设计模板，尚未接入测试文件、执行器、模型
+              技能目录和评测记录使用虚构演示数据。技能检查报告基于实际输入文本，只检查文档结构，不代表真实执行表现。评测基准目前是设计模板，尚未接入执行器、模型
               API 或认证服务。不同基准的分数不可直接比较。
             </p>
             <h4>独立项目</h4>

@@ -4,7 +4,7 @@ export type Category =
   | "表格提取"
   | "文档转换"
   | "内容校验";
-export type Page = "discover" | "benchmarks" | "compare" | "runs";
+export type Page = "discover" | "inspect" | "benchmarks" | "compare" | "runs";
 
 export interface Skill {
   id: string;
