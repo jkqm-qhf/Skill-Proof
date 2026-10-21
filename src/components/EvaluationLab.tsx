@@ -6,6 +6,7 @@ import { adapterBinding, runBenchmark } from "../executions";
 import type { Execution } from "../executions";
 import type { SkillProfile } from "../profiles";
 import BackendPanel from "./BackendPanel";
+import ExecutionComparison from "./ExecutionComparison";
 
 export default function EvaluationLab({
   profiles,
@@ -152,6 +153,7 @@ export default function EvaluationLab({
           </p>
         )}
       </section>
+      <ExecutionComparison executions={executions} candidate={selected} />
       <BackendPanel profiles={profiles} executions={executions} profileId={profileId} version={version} onRestore={onRestore} />
       <section className="suite-card">
         <h2>真实执行记录</h2>
