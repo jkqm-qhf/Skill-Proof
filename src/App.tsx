@@ -12,6 +12,7 @@ import {
   ChevronRight,
   CircleHelp,
   Clock3,
+  DatabaseBackup,
   FileCheck2,
   FileText,
   FlaskConical,
@@ -40,7 +41,9 @@ import {
 import type { Category, Page, Run, Skill } from "./types";
 import Modal from "./components/Modal";
 import RunHistory from "./components/RunHistory";
+import WorkspaceTransfer from "./components/WorkspaceTransfer";
 import { buildRunReport, createDemoRun } from "./runs";
+import { mergeWorkspace } from "./workspace";
 
 const iconMap = {
   file: FileText,
@@ -104,6 +107,7 @@ function App() {
     parseRuns(readStored("skillproof:runs"), skills),
   );
   const [info, setInfo] = useState(false);
+  const [transfer, setTransfer] = useState(false);
   const [toast, setToast] = useState("");
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
@@ -271,6 +275,15 @@ function App() {
             <span className="preview-label">
               <span /> 开发预览
             </span>
+            <button
+              className="workspace-transfer-button"
+              onClick={() => setTransfer(true)}
+              aria-label="工作区备份与恢复"
+              title="工作区备份与恢复"
+            >
+              <DatabaseBackup size={17} />
+              <span>备份与恢复</span>
+            </button>
             <button
               className="icon-button"
               onClick={() => setInfo(true)}
@@ -1029,6 +1042,30 @@ function App() {
         </Modal>
       )}
 
+      {transfer && (
+        <WorkspaceTransfer
+          favorites={favorites}
+          runs={runs}
+          skills={skills}
+          close={() => setTransfer(false)}
+          onExport={(backup) =>
+            download(
+              `skillproof-workspace-${backup.exportedAt.slice(0, 10)}.json`,
+              backup,
+            )
+          }
+          onRestore={(backup) => {
+            const merged = mergeWorkspace({ favorites, runs }, backup);
+            setFavorites(merged.favorites);
+            setRuns(merged.runs);
+            setTransfer(false);
+            notify(
+              `已导入 ${merged.addedFavorites} 项收藏和 ${merged.addedRuns} 条记录。`,
+            );
+          }}
+        />
+      )}
+
       {info && (
         <Modal title="关于 SkillProof" close={() => setInfo(false)}>
           <div className="about-copy">
@@ -1041,7 +1078,7 @@ function App() {
             <h4>这个版本可以做什么？</h4>
             <p>
               浏览和筛选示例技能、收藏档案、对比能力、回放演示评测，并导出 JSON
-              报告。评测记录支持搜索、基准筛选、历史明细、批量导出和删除。收藏与记录仅保存在当前浏览器。
+              报告。评测记录支持搜索、基准筛选、历史明细、批量导出和删除。收藏与记录保存在当前浏览器，可通过顶部“备份与恢复”导出或合并导入。
             </p>
             <h4>如何理解这里的数据？</h4>
             <p>
