@@ -45,6 +45,7 @@ import RunHistory from "./components/RunHistory";
 import WorkspaceTransfer from "./components/WorkspaceTransfer";
 import SkillInspector from "./components/SkillInspector";
 import ProfileLibrary from "./components/ProfileLibrary";
+import FixtureSuite from "./components/FixtureSuite";
 import { parseProfiles, persistProfiles, PROFILE_KEY } from "./profiles";
 import { buildRunReport, createDemoRun } from "./runs";
 import { mergeWorkspace } from "./workspace";
@@ -685,6 +686,7 @@ function App() {
 
           {page === "benchmarks" && (
             <>
+              <FixtureSuite />
               <div className="notice">
                 <FlaskConical size={19} />
                 <div>

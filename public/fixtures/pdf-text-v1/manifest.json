@@ -1,0 +1,70 @@
+{
+  "id": "pdf-text-baseline",
+  "version": "1.0.0",
+  "title": "数字 PDF 文本提取基准",
+  "scope": "Synthetic English/ASCII digital PDFs only. No OCR, columns, formulas, or image-based text.",
+  "license": "CC0-1.0",
+  "scoring": "Page count/order and exact text after whitespace normalization; invalid fixture must return an error.",
+  "cases": [
+    {
+      "id": "single-page",
+      "title": "单页文本与换行",
+      "file": "single-page.pdf",
+      "sha256": "f0e5f9257ac2332056d0a2771e5d36367f3636ae257fef39fa7540eb0a64d025",
+      "bytes": 689,
+      "expect": {
+        "pages": [
+          "SkillProof PDF baseline\nThe quick brown fox jumps over the lazy dog.\nTotal: 42 items."
+        ]
+      }
+    },
+    {
+      "id": "multi-page",
+      "title": "分页与阅读顺序",
+      "file": "multi-page.pdf",
+      "sha256": "cb9a5d986a120785c0c1eefc4db1f1048ac58d2536668faa102b099e435c62dc",
+      "bytes": 907,
+      "expect": {
+        "pages": [
+          "Page one\nFirst paragraph.",
+          "Page two\nSecond paragraph."
+        ]
+      }
+    },
+    {
+      "id": "blank-page",
+      "title": "空白页保留",
+      "file": "blank-page.pdf",
+      "sha256": "f21580668ff3d49f330812babdcdf118526a1b9582ce1bc7706897712ced68da",
+      "bytes": 852,
+      "expect": {
+        "pages": [
+          "",
+          "Text after a blank page."
+        ]
+      }
+    },
+    {
+      "id": "punctuation",
+      "title": "标点与括号",
+      "file": "punctuation.pdf",
+      "sha256": "9f506af411ab5adc90b2f5ee1701fc9355e312346e3b8bc722a17115263d2fef",
+      "bytes": 676,
+      "expect": {
+        "pages": [
+          "Invoice (sample)\nAmount: USD 1,234.50; tax: 8%.\nReference: A/B-C_2026."
+        ]
+      }
+    },
+    {
+      "id": "invalid-file",
+      "title": "损坏输入应报错",
+      "file": "invalid-file.pdf",
+      "sha256": "d9eea3909a5acfd1375e63a757a94926e644400cbd8f787c4b5d9a5f2e969f12",
+      "bytes": 46,
+      "expect": {
+        "error": true
+      }
+    }
+  ]
+}
