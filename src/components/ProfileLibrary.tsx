@@ -1,6 +1,13 @@
 import { useState } from "react";
-import { ArrowDownToLine, CheckCircle2, FileText, Plus } from "lucide-react";
+import {
+  ArrowDownToLine,
+  CheckCircle2,
+  FileText,
+  Plus,
+  Search,
+} from "lucide-react";
 import { reviseProfile } from "../profiles";
+import { filterProfiles, revisionExecutions } from "../profile-library";
 import type { SkillProfile } from "../profiles";
 import Modal from "./Modal";
 import type { Execution } from "../executions";
@@ -31,6 +38,7 @@ export default function ProfileLibrary({
   const [version, setVersion] = useState(1);
   const [error, setError] = useState("");
   const [saving, setSaving] = useState(false);
+  const [query, setQuery] = useState("");
   const form =
     editing ??
     (initialSource !== null
@@ -68,14 +76,41 @@ export default function ProfileLibrary({
     }
   }
   const revision = selected?.revisions.find((item) => item.version === version);
+  const visibleProfiles = filterProfiles(profiles, query);
+  const evidence =
+    selected && revision
+      ? revisionExecutions(executions, selected.id, revision)
+      : [];
+  const latestExecution = evidence[0];
   return (
     <section className="profiles-page">
       <div className="notice compact">
         <CheckCircle2 size={18} />
         <span>
-          以下是你保存的真实技能文档。能力、环境和权限均由发布者声明；实际验证结果将在真实评测后关联。
+          以下是你保存的真实技能文档。能力、环境和权限均由发布者声明；执行记录按档案、版本和原文哈希关联，仅反映对应基准的结果。
         </span>
       </div>
+      {profiles.length > 0 && (
+        <div className="history-toolbar">
+          <label className="search-box">
+            <Search size={18} />
+            <input
+              aria-label="搜索我的技能档案"
+              placeholder="搜索技能名称或描述…"
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+            />
+          </label>
+          <span role="status">
+            显示 {visibleProfiles.length} / {profiles.length} 个档案
+          </span>
+          {query && (
+            <button className="button secondary" onClick={() => setQuery("")}>
+              清空搜索
+            </button>
+          )}
+        </div>
+      )}
       <div className="section-heading">
         <h2>
           我的技能档案 <span>{profiles.length} PROFILES</span>
@@ -102,16 +137,29 @@ export default function ProfileLibrary({
         </div>
       )}
       <div className="skill-grid">
-        {profiles.map((profile) => {
+        {visibleProfiles.map((profile) => {
           const latest = profile.revisions.at(-1)!;
+          const records = revisionExecutions(executions, profile.id, latest);
+          const historicalCount = profile.revisions.slice(0, -1).reduce(
+            (count, item) =>
+              count + revisionExecutions(executions, profile.id, item).length,
+            0,
+          );
           return (
             <article className="suite-card" key={profile.id}>
-              <span className="demo-tag">声明档案 · 尚未验证</span>
+              <span className="demo-tag">
+                {records.length
+                  ? `当前版本 · ${records.length} 条执行记录`
+                  : "当前版本 · 尚无执行记录"}
+              </span>
               <h2>{latest.name}</h2>
               <p>{latest.description}</p>
               <p>
                 v{latest.version} · {profile.revisions.length} 个历史版本
               </p>
+              {historicalCount > 0 && (
+                <p>旧版本另有 {historicalCount} 条执行记录，不代表当前版本。</p>
+              )}
               <code className="hash-text">{latest.textSha256}</code>
               <button
                 className="button secondary"
@@ -126,6 +174,13 @@ export default function ProfileLibrary({
           );
         })}
       </div>
+      {profiles.length > 0 && visibleProfiles.length === 0 && (
+        <div className="empty-state">
+          <Search size={35} />
+          <h3>没有匹配的档案</h3>
+          <p>试试技能名称或描述中的其他关键词，或清空搜索。</p>
+        </div>
+      )}
       {selected && revision && (
         <Modal title="真实技能档案" close={() => setSelected(null)} wide>
           <div className="requirements">
@@ -158,16 +213,18 @@ export default function ProfileLibrary({
             </p>
             <p>
               <strong>真实执行证据</strong>
-              {
-                executions.filter(
-                  (item) =>
-                    item.profile.id === selected.id &&
-                    item.profile.version === revision.version &&
-                    item.profile.textSha256 === revision.textSha256,
-                ).length
-              }{" "}
+              {evidence.length}{" "}
               条关联记录；仅对所用 PDF 基准有效，静态检查不验证能力。
             </p>
+            {latestExecution && (
+              <p>
+                <strong>最近一次执行</strong>
+                {new Date(latestExecution.createdAt).toLocaleString("zh-CN")} ·{" "}
+                {latestExecution.suite.id} v{latestExecution.suite.version} ·{" "}
+                {latestExecution.results.filter((item) => item.passed).length}/
+                {latestExecution.results.length} 项通过
+              </p>
+            )}
           </div>
           <h4>声明的能力</h4>
           <ul>

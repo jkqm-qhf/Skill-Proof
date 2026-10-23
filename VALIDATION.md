@@ -24,6 +24,7 @@ Five PDF cases are synthetic and intentionally narrow: single-page text, multipl
 - Publish summary/full evidence -> open in another browser context -> submit inert-text feedback -> revoke -> old link unavailable.
 - Submit a skill -> inspect pending source -> accept as a declaration profile; no automatic execution/publication.
 - Mobile source/result/share layouts and horizontally scrollable navigation.
+- Profile library: case-insensitive multi-keyword search over the latest name/description, clear/no-match states, and version-specific evidence counts. After a real five-case PDF run, a new revision shows no current evidence while the prior revision retains its 5/5 result. Checked at 390px mobile width without horizontal page overflow.
 
 ## Explicit boundaries
 
